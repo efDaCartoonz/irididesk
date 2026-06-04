@@ -11,7 +11,7 @@ Version:
 1.0.0
 
 Source code:
-https://github.com/efDaCartoonz/irididesk/releases/tag/v1.0.0
+https://github.com/efDaCartoonz/irididesk
 
 Original project:
 RustDesk

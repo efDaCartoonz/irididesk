@@ -43,4 +43,4 @@ See `BUILDING-iRidiDesk.md`.
 
 ## Source code for release 1.0.0
 
-https://github.com/efDaCartoonz/irididesk/releases/tag/v1.0.0
+https://github.com/efDaCartoonz/irididesk
