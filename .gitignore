@@ -1,0 +1,86 @@
+/build
+/target
+.vscode
+.idea
+.DS_Store
+.env
+libsciter-gtk.so
+src/ui/inline.rs
+extractor
+__pycache__
+src/version.rs
+*dmg
+*exe
+*tgz
+cert.pfx
+*.bak
+*png
+*svg
+*jpg
+sciter.dll
+**pdb
+src/bridge_generated.rs
+src/bridge_generated.io.rs
+*deb
+rustdesk
+*.cache
+# appimage
+appimage/AppDir
+appimage/*.AppImage
+appimage/appimage-build
+appimage/*.xz
+# flutter
+flutter/linux/build/**
+flutter/linux/cmake-build-debug/**
+# flatpak
+flatpak/.flatpak-builder/**
+flatpak/ccache/**
+flatpak/.flatpak-builder/build/**
+flatpak/.flatpak-builder/shared-modules/**
+flatpak/.flatpak-builder/shared-modules/*.tar.xz
+flatpak/.flatpak-builder/debian-binary
+flatpak/build/**
+flatpak/repo/**
+flatpak/*.flatpak
+# bridge file
+lib/generated_bridge.dart
+# vscode devcontainer
+.gitconfig
+.vscode-server/
+.ssh
+.devcontainer/.*
+# build cache in examples
+examples/**/target/
+# ===
+vcpkg_installed
+flutter/lib/generated_plugin_registrant.dart
+libsciter.dylib
+flutter/web/
+# iRidiDesk private build parameters
+.env
+.env.local
+.env.production
+
+# Local packaged builds
+/iridi_desk*.exe
+/iRidiDesk*.exe
+/iridi_desk*.zip
+/iridi_desk*.7z
+/iridi_desk*_payload/
+/iRidiDesk*_payload/
+# iRidiDesk private build parameters
+.env
+.env.*
+!.env.example
+# Build artifacts
+target/
+*.exe
+*.dll
+*.pdb
+*.zip
+*.7z
+*.rar
+*.msi
+# Local backups
+*.bak
+*.bak*

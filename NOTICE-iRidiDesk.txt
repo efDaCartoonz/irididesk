@@ -1,0 +1,31 @@
+iRidiDesk Notice
+
+iRidiDesk is a modified build based on RustDesk.
+
+Original project:
+RustDesk
+
+Original license:
+GNU Affero General Public License version 3
+
+Modification summary:
+- The application was rebranded as iRidiDesk.
+- The client is configured as an incoming-support client only.
+- Outgoing connection UI was removed or hidden.
+- Server configuration UI was removed or hidden.
+- Production server parameters are injected at build time.
+- Application UI was simplified to show only ID, one-time password, settings and connection status.
+- Application icon, application name and runtime branding were changed.
+- UI languages were reduced to English and Russian.
+- Additional license notices were added to the About dialog.
+
+Original RustDesk copyright notices are preserved in the source code.
+
+Modified by:
+iRidi
+
+Release version:
+iRidiDesk 1.0.0
+
+Release date:
+2026-06-04

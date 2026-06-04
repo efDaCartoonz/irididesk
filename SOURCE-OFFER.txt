@@ -1,0 +1,24 @@
+Source Code Offer
+
+iRidiDesk is a modified build based on RustDesk.
+
+The source code corresponding to this binary release is available under the GNU AGPLv3 terms.
+
+Product:
+iRidiDesk
+
+Version:
+1.0.0
+
+Source code:
+https://github.com/efDaCartoonz/irididesk/releases/tag/v1.0.0
+
+Original project:
+RustDesk
+
+License:
+GNU AGPLv3
+
+Production server addresses, private keys, tokens, certificates, passwords and deployment secrets are not included in the public source package.
+
+Source code access is provided through the link above.

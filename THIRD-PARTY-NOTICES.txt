@@ -1,0 +1,11 @@
+Third-Party Notices
+
+This product is based on RustDesk and includes third-party open-source components used by the original RustDesk project and this modified build.
+
+RustDesk:
+https://github.com/rustdesk/rustdesk
+License: GNU AGPLv3
+
+The complete source package includes Cargo.toml, Cargo.lock and build files describing Rust and native dependencies required to build this version.
+
+Original copyright and license notices are preserved in the corresponding source package.
