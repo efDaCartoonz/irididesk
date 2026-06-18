@@ -178,13 +178,23 @@ class Body: Reactor.Component
     }
 
     event click $(button#elevate_accept) {
-        // iRidiDesk thin build: elevation/UAC flow is disabled.
-        return;
+        var cid = this.cid;
+        checkClickTime(function() {
+            connection.authorized = true;
+            body.update();
+            handler.authorize(cid);
+            handler.elevate_portable(cid);
+            self.timer(30ms, function() {
+                setWindowState(View.WINDOW_MINIMIZED);
+            });
+        });
     }
 
     event click $(button#elevate) {
-        // iRidiDesk thin build: elevation/UAC flow is disabled.
-        return;
+        var cid = this.cid;
+        checkClickTime(function() {
+            handler.elevate_portable(cid);
+        });
     }
 
     event click $(button#dismiss) {
