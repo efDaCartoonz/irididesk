@@ -180,11 +180,12 @@ class Body: Reactor.Component
     event click $(button#elevate_accept) {
         var cid = this.cid;
         checkClickTime(function() {
-            connection.authorized = true;
-            body.update();
             handler.authorize(cid);
-            handler.elevate_portable(cid);
-            self.timer(30ms, function() {
+            show_elevation = false;
+            body.update();
+
+            self.timer(200ms, function() {
+                handler.elevate_portable(cid);
                 setWindowState(View.WINDOW_MINIMIZED);
             });
         });
@@ -194,6 +195,8 @@ class Body: Reactor.Component
         var cid = this.cid;
         checkClickTime(function() {
             handler.elevate_portable(cid);
+            show_elevation = false;
+            body.update();
         });
     }
 
