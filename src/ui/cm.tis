@@ -36,7 +36,7 @@ class Body: Reactor.Component
         };
         var right_style = show_chat ? "" : "display: none";
         var disconnected = c.disconnected;
-        var show_elevation_btn = false; // iRidiDesk thin build: elevation/UAC flow is disabled.
+        var show_elevation_btn = show_elevation && handler.can_elevate();
         var show_accept_btn = handler.get_option('approve-mode') != 'password';
        // below size:* is a workaround for Linux, it already set in css, but not work, shit sciter
         return <div .content style="size:*">
@@ -434,6 +434,7 @@ handler.newMessage = function(id, text) {
 handler.showElevation = function(show) {
     if (show != show_elevation) {
         show_elevation = show;
+        show_elevation_btn = show_elevation && handler.can_elevate();
         update();
     }
 }
