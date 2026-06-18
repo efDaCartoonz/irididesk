@@ -40,6 +40,20 @@ const ADDR_CURSOR_COUNTER: usize = ADDR_CURSOR_PARA + size_of::<CURSORINFO>();
 const ADDR_CAPTURER_PARA: usize = ADDR_CURSOR_COUNTER + SIZE_COUNTER;
 const ADDR_CAPTURE_FRAME_INFO: usize = ADDR_CAPTURER_PARA + size_of::<CapturerPara>();
 const ADDR_CAPTURE_WOULDBLOCK: usize = ADDR_CAPTURE_FRAME_INFO + size_of::<FrameInfo>();
+
+#[repr(C)]
+pub struct CapturerPara {
+    recreate: bool,
+    current_display: usize,
+    timeout_ms: i32,
+}
+
+#[repr(C)]
+pub struct FrameInfo {
+    length: usize,
+    width: usize,
+    height: usize,
+}
 const ADDR_CAPTURE_FRAME_COUNTER: usize = ADDR_CAPTURE_WOULDBLOCK + size_of::<i32>();
 
 const ADDR_CAPTURE_FRAME: usize =
@@ -301,6 +315,7 @@ pub mod server {
     }
 
     fn run_capture(shmem: Arc<SharedMemory>) {
+        log::info!("iRidi elevation debug: portable run_capture started");
         let mut c = None;
         let mut last_current_display = usize::MAX;
         let mut last_timeout_ms: i32 = 33;
@@ -309,6 +324,10 @@ pub mod server {
         let mut dxgi_failed_times = 0;
         let mut display_width = 0;
         let mut display_height = 0;
+        let mut iridi_capture_create_log_count = 0usize;
+        let mut iridi_capture_frame_ok_log_count = 0usize;
+        let mut iridi_capture_frame_err_log_count = 0usize;
+        let mut iridi_consecutive_wouldblock_count = 0usize;
         loop {
             if EXIT.lock().unwrap().clone() {
                 break;
@@ -320,6 +339,19 @@ pub mod server {
                 let current_display = (*para).current_display;
                 let timeout_ms = (*para).timeout_ms;
                 if c.is_none() {
+                    if iridi_capture_create_log_count < 50 {
+                        iridi_capture_create_log_count += 1;
+                        log::info!(
+                            "iRidi elevation debug: portable run_capture c_is_none #{}, recreate={}, current_display={}, timeout_ms={}",
+                            iridi_capture_create_log_count,
+                            recreate,
+                            current_display,
+                            timeout_ms
+                        );
+                    }
+                    log::info!("iRidi elevation fix: portable SYSTEM capturer try_change_desktop before get_displays");
+                    crate::platform::try_change_desktop();
+
                     let Ok(mut displays) = display_service::try_get_displays() else {
                         log::error!("Failed to get displays");
                         *EXIT.lock().unwrap() = true;
@@ -333,11 +365,31 @@ pub mod server {
                     let display = displays.remove(current_display);
                     display_width = display.width();
                     display_height = display.height();
+                    log::info!(
+                        "iRidi elevation debug: portable run_capture try Capturer::new, display={}, size={}x{}",
+                        current_display,
+                        display_width,
+                        display_height
+                    );
                     match Capturer::new(display) {
                         Ok(mut v) => {
+                            log::info!(
+                                "iRidi elevation debug: portable run_capture Capturer::new ok, is_gdi={}",
+                                v.is_gdi()
+                            );
+
+                            if !v.is_gdi() {
+                                log::info!("iRidi elevation fix test: force GDI for portable SYSTEM capturer");
+                                v.set_gdi();
+                                log::info!(
+                                    "iRidi elevation fix test: after force GDI, is_gdi={}",
+                                    v.is_gdi()
+                                );
+                            }
                             c = {
                                 last_current_display = current_display;
                                 first_frame_captured = false;
+                                iridi_consecutive_wouldblock_count = 0;
                                 if dxgi_failed_times > MAX_DXGI_FAIL_TIME {
                                     dxgi_failed_times = 0;
                                     v.set_gdi();
@@ -354,13 +406,25 @@ pub mod server {
                             }
                         }
                         Err(e) => {
-                            log::error!("Failed to create gdi capturer: {:?}", e);
+                            log::error!("iRidi elevation debug: Failed to create gdi capturer: {:?}", e);
                             std::thread::sleep(std::time::Duration::from_secs(1));
                             continue;
                         }
                     }
                 } else {
                     if recreate || current_display != last_current_display {
+                        if iridi_capture_create_log_count < 50 {
+                            iridi_capture_create_log_count += 1;
+                            log::info!(
+                                "iRidi elevation debug: portable run_capture recreate #{}, recreate={}, display: {} -> {}, timeout_ms={}, c_is_some={}",
+                                iridi_capture_create_log_count,
+                                recreate,
+                                last_current_display,
+                                current_display,
+                                timeout_ms,
+                                c.is_some()
+                            );
+                        }
                         log::info!(
                             "create capturer, display: {} -> {}",
                             last_current_display,
@@ -397,14 +461,34 @@ pub mod server {
                             shmem.write(ADDR_CAPTURE_FRAME, f.data());
                             shmem.write(ADDR_CAPTURE_WOULDBLOCK, &utils::i32_to_vec(TRUE));
                             utils::increase_counter(shmem.as_ptr().add(ADDR_CAPTURE_FRAME_COUNTER));
+                            if iridi_capture_frame_ok_log_count < 20 {
+                                iridi_capture_frame_ok_log_count += 1;
+                                log::info!(
+                                    "iRidi elevation debug: portable run_capture frame ok #{}, len={}, size={}x{}",
+                                    iridi_capture_frame_ok_log_count,
+                                    f.data().len(),
+                                    display_width,
+                                    display_height
+                                );
+                            }
                             first_frame_captured = true;
                             dxgi_failed_times = 0;
+                            iridi_consecutive_wouldblock_count = 0;
                         }
                         Frame::Texture(_) => {
                             // should not happen
                         }
                     },
                     Some(Err(e)) => {
+                        if iridi_capture_frame_err_log_count < 20 {
+                            iridi_capture_frame_err_log_count += 1;
+                            log::info!(
+                                "iRidi elevation debug: portable run_capture frame err #{}, kind={:?}, err={:?}",
+                                iridi_capture_frame_err_log_count,
+                                e.kind(),
+                                e
+                            );
+                        }
                         if crate::platform::windows::desktop_changed() {
                             crate::platform::try_change_desktop();
                             c = None;
@@ -425,6 +509,22 @@ pub mod server {
                             }
                         } else {
                             shmem.write(ADDR_CAPTURE_WOULDBLOCK, &utils::i32_to_vec(TRUE));
+
+                            iridi_consecutive_wouldblock_count += 1;
+                            if iridi_consecutive_wouldblock_count == 30
+                                || iridi_consecutive_wouldblock_count == 90
+                                || iridi_consecutive_wouldblock_count == 180
+                            {
+                                log::info!(
+                                    "iRidi elevation fix test: portable SYSTEM capturer repeated WouldBlock count={}, try_change_desktop and recreate capturer",
+                                    iridi_consecutive_wouldblock_count
+                                );
+                                crate::platform::try_change_desktop();
+                                c = None;
+                                first_frame_captured = false;
+                                std::thread::sleep(spf);
+                                continue;
+                            }
                         }
                     }
                     _ => {
@@ -645,6 +745,8 @@ pub mod client {
     pub struct CapturerPortable {
         width: usize,
         height: usize,
+        iridi_frame_ok_log_count: usize,
+        iridi_frame_err_log_count: usize,
     }
 
     impl CapturerPortable {
@@ -674,7 +776,18 @@ pub mod client {
                     height = display.height();
                 }
             }
-            CapturerPortable { width, height }
+            log::info!(
+                "iRidi elevation debug: CapturerPortable::new current_display={}, size={}x{}",
+                current_display,
+                width,
+                height
+            );
+            CapturerPortable {
+                width,
+                height,
+                iridi_frame_ok_log_count: 0,
+                iridi_frame_err_log_count: 0,
+            }
         }
     }
 
@@ -717,6 +830,18 @@ pub mod client {
                     }
                     let frame_ptr = base.add(ADDR_CAPTURE_FRAME);
                     let data = slice::from_raw_parts(frame_ptr, (*frame_info).length);
+                    if self.iridi_frame_ok_log_count < 20 {
+                        self.iridi_frame_ok_log_count += 1;
+                        log::info!(
+                            "iRidi elevation debug: CapturerPortable frame ok #{}, len={}, frame_size={}x{}, expected_size={}x{}",
+                            self.iridi_frame_ok_log_count,
+                            (*frame_info).length,
+                            (*frame_info).width,
+                            (*frame_info).height,
+                            self.width,
+                            self.height
+                        );
+                    }
                     Ok(Frame::PixelBuffer(PixelBuffer::with_BGRA(
                         data,
                         self.width,
@@ -726,11 +851,27 @@ pub mod client {
                     let ptr = base.add(ADDR_CAPTURE_WOULDBLOCK);
                     let wouldblock = utils::ptr_to_i32(ptr);
                     if wouldblock == TRUE {
+                        if self.iridi_frame_err_log_count < 20 {
+                            self.iridi_frame_err_log_count += 1;
+                            log::info!(
+                                "iRidi elevation debug: CapturerPortable frame wouldblock #{}, timeout_ms={}",
+                                self.iridi_frame_err_log_count,
+                                (*para).timeout_ms
+                            );
+                        }
                         Err(std::io::Error::new(
                             std::io::ErrorKind::WouldBlock,
                             "wouldblock error".to_string(),
                         ))
                     } else {
+                        if self.iridi_frame_err_log_count < 20 {
+                            self.iridi_frame_err_log_count += 1;
+                            log::warn!(
+                                "iRidi elevation debug: CapturerPortable frame other error #{}, wouldblock={}",
+                                self.iridi_frame_err_log_count,
+                                wouldblock
+                            );
+                        }
                         Err(std::io::Error::new(
                             std::io::ErrorKind::Other,
                             "other error".to_string(),
@@ -917,15 +1058,16 @@ pub mod client {
         if portable_service_running != RUNNING.lock().unwrap().clone() {
             log::info!("portable service status mismatch");
         }
+
         if portable_service_running && display.is_primary() {
             log::info!("Create shared memory capturer");
             return Ok(Box::new(CapturerPortable::new(current_display)));
-        } else {
-            log::debug!("Create capturer dxgi|gdi");
-            return Ok(Box::new(
-                Capturer::new(display).with_context(|| "Failed to create capturer")?,
-            ));
         }
+
+        log::debug!("Create capturer dxgi|gdi");
+        Ok(Box::new(
+            Capturer::new(display).with_context(|| "Failed to create capturer")?,
+        ))
     }
 
     pub fn get_cursor_info(pci: PCURSORINFO) -> BOOL {
@@ -975,18 +1117,4 @@ pub mod client {
     pub fn running() -> bool {
         RUNNING.lock().unwrap().clone()
     }
-}
-
-#[repr(C)]
-pub struct CapturerPara {
-    recreate: bool,
-    current_display: usize,
-    timeout_ms: i32,
-}
-
-#[repr(C)]
-pub struct FrameInfo {
-    length: usize,
-    width: usize,
-    height: usize,
 }

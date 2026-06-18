@@ -2301,10 +2301,31 @@ pub fn elevate(arg: &str) -> ResultType<bool> {
 
 pub fn run_as_system(arg: &str) -> ResultType<()> {
     let exe = std::env::current_exe()?.to_string_lossy().to_string();
-    if impersonate_system::run_as_system(&exe, arg).is_err() {
-        bail!(format!("Failed to run {} as system", exe));
+    log::info!(
+        "iRidi elevation debug: run_as_system call, exe={}, arg={}",
+        exe,
+        arg
+    );
+
+    match impersonate_system::run_as_system(&exe, arg) {
+        Ok(_) => {
+            log::info!(
+                "iRidi elevation debug: run_as_system returned Ok, exe={}, arg={}",
+                exe,
+                arg
+            );
+            Ok(())
+        }
+        Err(e) => {
+            log::error!(
+                "iRidi elevation debug: run_as_system returned Err: {:?}, exe={}, arg={}",
+                e,
+                exe,
+                arg
+            );
+            bail!(format!("Failed to run {} as system", exe));
+        }
     }
-    Ok(())
 }
 
 pub fn elevate_or_run_as_system(is_setup: bool, is_elevate: bool, is_run_as_system: bool) {
@@ -2317,18 +2338,24 @@ pub fn elevate_or_run_as_system(is_setup: bool, is_elevate: bool, is_run_as_syst
         crate::username(),
     );
     let arg_elevate = if is_setup {
-        "--noinstall --elevate"
+        "--portable-service --noinstall --elevate"
     } else {
-        "--elevate"
+        "--portable-service --elevate"
     };
     let arg_run_as_system = if is_setup {
-        "--noinstall --run-as-system"
+        "--portable-service --noinstall --run-as-system"
     } else {
-        "--run-as-system"
+        "--portable-service --run-as-system"
     };
     if is_root() {
         if is_run_as_system {
-            log::info!("run portable service");
+            log::info!(
+                "iRidi elevation debug: run portable service as SYSTEM, is_setup={}, is_elevate={}, is_run_as_system={}, user={}",
+                is_setup,
+                is_elevate,
+                is_run_as_system,
+                crate::username()
+            );
             crate::portable_service::server::run_portable_service();
         }
     } else {
@@ -2336,6 +2363,7 @@ pub fn elevate_or_run_as_system(is_setup: bool, is_elevate: bool, is_run_as_syst
             Ok(elevated) => {
                 if elevated {
                     if !is_run_as_system {
+                        log::info!("iRidi elevation debug: try run_as_system with args: {}", arg_run_as_system);
                         if run_as_system(arg_run_as_system).is_ok() {
                             std::process::exit(0);
                         } else {
@@ -2347,6 +2375,7 @@ pub fn elevate_or_run_as_system(is_setup: bool, is_elevate: bool, is_run_as_syst
                     }
                 } else {
                     if !is_elevate {
+                        log::info!("iRidi elevation debug: try elevate with args: {}", arg_elevate);
                         if let Ok(true) = elevate(arg_elevate) {
                             std::process::exit(0);
                         } else {

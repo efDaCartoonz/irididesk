@@ -562,7 +562,20 @@ fn run(vs: VideoService) -> ResultType<()> {
 
     let display_idx = vs.idx;
     let sp = vs.sp;
+    log::info!(
+        "iRidi elevation debug: video run start, display_idx={}, portable_service_running={}",
+        display_idx,
+        last_portable_service_running
+    );
     let mut c = get_capturer(vs.source, display_idx, last_portable_service_running)?;
+    log::info!(
+        "iRidi elevation debug: capturer created, display_idx={}, portable_service_running={}, size={}x{}, gdi={}",
+        display_idx,
+        last_portable_service_running,
+        c.width,
+        c.height,
+        c.is_gdi()
+    );
     #[cfg(windows)]
     if !scrap::codec::enable_directx_capture() && !c.is_gdi() {
         log::info!("disable dxgi with option, fall back to gdi");
@@ -681,7 +694,11 @@ fn run(vs: VideoService) -> ResultType<()> {
         }
         #[cfg(windows)]
         if last_portable_service_running != crate::portable_service::client::running() {
-            log::info!("switch due to portable service running changed");
+            log::info!(
+                "iRidi elevation debug: switch due to portable service running changed, old={}, new={}",
+                last_portable_service_running,
+                crate::portable_service::client::running()
+            );
             bail!("SWITCH");
         }
         if Encoder::use_i444(&encoder_cfg) != use_i444 {
