@@ -569,7 +569,7 @@ class MyIdMenu: Reactor.Component {
     function showAbout() {
         var is_ru = translate("Version") == "Версия";
         var rustdesk = "Rust&#x44;esk";
-        var app_version = "1.0.0";
+        var app_version = "1.0.1";
         var source_url = "https://github.com/efDaCartoonz/irididesk";
 
         var title = is_ru ? "О приложении iRidiDesk" : "About iRidiDesk";
