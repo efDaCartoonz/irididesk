@@ -23,11 +23,11 @@ Do not commit production .env files.
 Install the Rust toolchain once, including the 32-bit MSVC target:
 
 ```bash
-rustup toolchain install stable
-rustup target add i686-pc-windows-msvc
+rustup toolchain install stable-x86_64-pc-windows-msvc --force-non-host
+rustup target add i686-pc-windows-msvc --toolchain stable-x86_64-pc-windows-msvc
 ```
 
-For an ARM64 build computer, install **Desktop development with C++** plus these individual components: **MSVC v143 – VS 2022 C++ ARM64 build tools** and **C++ Clang tools for Windows**. The script uses the x64-hosted ARM64 linker for Rust's local build scripts and an x64-hosted x86 linker only for the final client, so the resulting package remains x86 (32-bit).
+On an ARM64 build computer, the script intentionally uses the x64 Rust toolchain through Windows' built-in x64 emulation: RustDesk's bundled build dependencies include x64-only libraries. Install **Desktop development with C++** and the **MSVC v143 – VS 2022 C++ x64/x86 build tools** component. The final package remains x86 (32-bit).
 
 Then create the local release archive from PowerShell:
 

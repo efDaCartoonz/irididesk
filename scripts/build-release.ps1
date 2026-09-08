@@ -43,20 +43,20 @@ try {
     if (-not (Test-Path -LiteralPath $vcVars)) {
         throw 'Microsoft C++ Build Tools are required for the Windows linker.'
     }
-    $arm64Linker = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC' -Filter link.exe -Recurse -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -match '\\bin\\HostX64\\arm64\\link\.exe$' } |
+    $msvcRoot = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC'
+    $msvc = Get-ChildItem $msvcRoot -Directory -ErrorAction SilentlyContinue |
+        Where-Object {
+            (Test-Path (Join-Path $_.FullName 'lib\x64\msvcrt.lib')) -and
+            (Test-Path (Join-Path $_.FullName 'lib\x86\msvcrt.lib'))
+        } |
+        Sort-Object Name -Descending |
         Select-Object -First 1
-    if ($null -eq $arm64Linker) {
-        throw 'Install the Microsoft C++ ARM64 build tools component before building from an ARM64 PC.'
+    if ($null -eq $msvc) {
+        throw 'Install the MSVC v143 C++ x64/x86 build tools component before building.'
     }
-    $clang = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm' -Filter clang.exe -Recurse -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    if ($null -eq $clang) {
-        throw 'Install the C++ Clang tools for Windows component before building from an ARM64 PC.'
-    }
-    $env:Path = $clang.DirectoryName + ';' + $env:Path
+    $env:IRIDI_VCVARS_VERSION = ($msvc.Name.Split('.')[0..1] -join '.')
     $env:CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER = Join-Path $PSScriptRoot 'link-i686.cmd'
-    cmd.exe /d /s /c "call `"$vcVars`" x64_arm64 >nul && cargo build --release --target i686-pc-windows-msvc"
+    cmd.exe /d /s /c "call `"$vcVars`" x64 -vcvars_ver=$env:IRIDI_VCVARS_VERSION >nul && cargo +stable-x86_64-pc-windows-msvc build --release --target i686-pc-windows-msvc"
     if ($LASTEXITCODE -ne 0) {
         throw "Cargo build failed with exit code $LASTEXITCODE"
     }
