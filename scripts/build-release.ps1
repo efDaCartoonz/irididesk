@@ -44,13 +44,13 @@ try {
         throw 'Microsoft C++ Build Tools are required for the Windows linker.'
     }
     $arm64Linker = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC' -Filter link.exe -Recurse -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -match '\\bin\\Hostarm64\\arm64\\link\.exe$' } |
+        Where-Object { $_.FullName -match '\\bin\\HostX64\\arm64\\link\.exe$' } |
         Select-Object -First 1
     if ($null -eq $arm64Linker) {
         throw 'Install the Microsoft C++ ARM64 build tools component before building from an ARM64 PC.'
     }
     $env:CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER = Join-Path $PSScriptRoot 'link-i686.cmd'
-    cmd.exe /d /s /c "`"$vcVars`" arm64 >nul && cargo build --release --target i686-pc-windows-msvc"
+    cmd.exe /d /s /c "call `"$vcVars`" x64_arm64 >nul && cargo build --release --target i686-pc-windows-msvc"
     if ($LASTEXITCODE -ne 0) {
         throw "Cargo build failed with exit code $LASTEXITCODE"
     }
