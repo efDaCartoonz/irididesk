@@ -682,8 +682,9 @@ async fn test_nat_type_() -> ResultType<bool> {
 }
 
 pub async fn get_rendezvous_server(_ms_timeout: u64) -> (String, Vec<String>, bool) {
+    let server = config::iridi_rendezvous_server();
     let a = socket_client::check_port(
-        config::IRIDI_RENDEZVOUS_SERVER,
+        &server,
         config::RENDEZVOUS_PORT,
     );
     (a, Vec::new(), true)
@@ -1010,7 +1011,7 @@ pub fn is_setup(name: &str) -> bool {
 }
 
 pub fn get_custom_rendezvous_server(_custom: String) -> String {
-    config::IRIDI_RENDEZVOUS_SERVER.to_owned()
+    config::iridi_rendezvous_server()
 }
 
 #[inline]
@@ -1032,7 +1033,7 @@ pub fn get_api_server(api: String, custom: String) -> String {
 }
 
 fn get_api_server_(_api: String, _custom: String) -> String {
-    config::IRIDI_API_SERVER.to_owned()
+    config::iridi_api_server()
 }
 
 #[inline]
@@ -1465,7 +1466,7 @@ pub fn decode64<T: AsRef<[u8]>>(input: T) -> Result<Vec<u8>, base64::DecodeError
 }
 
 pub async fn get_key(_sync: bool) -> String {
-    config::IRIDI_PUB_KEY.to_owned()
+    config::iridi_pub_key()
 }
 
 pub fn pk_to_fingerprint(pk: Vec<u8>) -> String {

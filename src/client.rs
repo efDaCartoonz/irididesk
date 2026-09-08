@@ -758,11 +758,12 @@ impl Client {
         key: &str,
         conn: &mut Stream,
     ) -> ResultType<Option<Vec<u8>>> {
-        let rs_pk = get_rs_pk(if key.is_empty() {
-            config::IRIDI_PUB_KEY
+        let configured_key = if key.is_empty() {
+            config::iridi_pub_key()
         } else {
-            key
-        });
+            key.to_owned()
+        };
+        let rs_pk = get_rs_pk(&configured_key);
         let mut sign_pk = None;
         let mut option_pk = None;
         if !signed_id_pk.is_empty() {
@@ -1790,7 +1791,7 @@ impl LoginConfigHandler {
             let server = server_key.next().unwrap_or_default();
             let args = server_key.next().unwrap_or_default();
             let key = if server == PUBLIC_SERVER {
-                config::IRIDI_PUB_KEY.to_owned()
+                config::iridi_pub_key()
             } else {
                 let mut args_map: HashMap<String, &str> = HashMap::new();
                 for arg in args.split('&') {

@@ -348,7 +348,7 @@ pub fn check_ws(endpoint: &str) -> String {
     };
 
     let custom_rendezvous_server = Config::get_rendezvous_server();
-    let relay_server = crate::config::IRIDI_RELAY_SERVER.to_owned();
+    let relay_server = crate::config::iridi_relay_server();
     let rendezvous_port = split_host_port(&custom_rendezvous_server)
         .map(|(_, p)| p)
         .unwrap_or(RENDEZVOUS_PORT);

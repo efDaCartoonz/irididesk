@@ -44,7 +44,7 @@ pub const ENCRYPT_MAX_LEN: usize = 128; // used for password, pin, etc, not for 
 #[cfg(target_os = "macos")]
 lazy_static::lazy_static! {
     pub static ref ORG: RwLock<String> = RwLock::new("com.iridi".to_owned());
-}
+	        }
 
 type Size = (i32, i32, i32, i32);
 type KeyPair = (Vec<u8>, Vec<u8>);
@@ -108,30 +108,12 @@ const CHARS: &[char] = &[
 
 pub const RENDEZVOUS_SERVERS: &[&str] = &[""];
 
-// iRidiDesk build-time parameters.
-// Real production values are injected through environment variables during build.
-// Do not store production server parameters in public source code.
+// The generated functions decode the build-time configuration only in memory.
+include!(concat!(env!("OUT_DIR"), "/iridi_build_config.rs"));
+
+// iRidiDesk is a receiving-only, vendor-configured client.
 pub const IRIDI_VENDOR_LOCKED: bool = true;
-
-pub const IRIDI_RENDEZVOUS_SERVER: &str = match option_env!("IRIDI_RENDEZVOUS_SERVER") {
-    Some(v) => v,
-    None => "",
-};
-
-pub const IRIDI_RELAY_SERVER: &str = match option_env!("IRIDI_RELAY_SERVER") {
-    Some(v) => v,
-    None => "",
-};
-
-pub const IRIDI_API_SERVER: &str = match option_env!("IRIDI_API_SERVER") {
-    Some(v) => v,
-    None => "",
-};
-
-pub const IRIDI_PUB_KEY: &str = match option_env!("IRIDI_PUB_KEY") {
-    Some(v) => v,
-    None => "",
-};
+pub const IRIDI_THIN_CLIENT: bool = true;
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
@@ -790,11 +772,11 @@ impl Config {
     }
 
     pub fn get_rendezvous_server() -> String {
-        crate::config::IRIDI_RENDEZVOUS_SERVER.to_owned()
+        crate::config::iridi_rendezvous_server()
     }
 
     pub fn get_rendezvous_servers() -> Vec<String> {
-        vec![crate::config::IRIDI_RENDEZVOUS_SERVER.to_owned()]
+        vec![crate::config::iridi_rendezvous_server()]
     }
 
     pub fn reset_online() {
@@ -1075,6 +1057,7 @@ impl Config {
             v.remove("key");
             v.remove("other-server-key");
             v.remove("force-always-relay");
+            v.remove("enable-terminal");
         }
         Self::purify_options(&mut v);
         let mut config = CONFIG2.write().unwrap();
@@ -1092,6 +1075,7 @@ impl Config {
         		"relay-server" => return "".to_string(),
         		"api-server" => return "".to_string(),
         		"key" => return "".to_string(),
+		"enable-terminal" => return "N".to_string(),
 		        _ => {}
 		    }
 		}
@@ -1116,10 +1100,14 @@ impl Config {
 		        | "api-server"
         		| "key"
 		        | "other-server-key"
-        		| "force-always-relay" => {
+		    | "force-always-relay" => {
 		            log::info!("Ignoring write to vendor-locked option: {}", k);
         		    return;
-		        }
+		}
+		    "enable-terminal" => {
+                    log::info!("Ignoring write to disabled terminal option");
+                    return;
+                }
         		_ => {}
 		    }
 		}
@@ -2500,6 +2488,9 @@ fn is_option_can_save(
 
 #[inline]
 pub fn is_incoming_only() -> bool {
+    if IRIDI_THIN_CLIENT {
+        return true;
+    }
     HARD_SETTINGS
         .read()
         .unwrap()
@@ -2532,6 +2523,9 @@ pub fn is_disable_tcp_listen() -> bool {
 
 #[inline]
 pub fn is_disable_settings() -> bool {
+    if IRIDI_THIN_CLIENT {
+        return true;
+    }
     is_some_hard_opton("disable-settings")
 }
 

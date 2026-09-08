@@ -6,7 +6,10 @@ stdout.println("is_xfce: ", is_xfce);
 const msgbox_default_height = 180;
 const incoming_only_width = 180;
 
-const outgoing_only = handler.is_outgoing_only();
+// The thin client receives support sessions only. Keep the normal RustDesk
+// connection dashboard out of the interface while the backend rejects every
+// outgoing connection attempt.
+const outgoing_only = handler.is_incoming_only();
 const incoming_only = handler.is_incoming_only();
 const disable_installation = handler.is_disable_installation();
 const disable_account = handler.is_disable_account();
@@ -516,7 +519,6 @@ class MyIdMenu: Reactor.Component {
                 {!disable_settings && <li #enable-clipboard><span>{svg_checkmark}</span>{translate('Enable clipboard')}</li>}
                 {!disable_settings && <li #enable-file-transfer><span>{svg_checkmark}</span>{translate('Enable file transfer')}</li>}
                 {!disable_settings && <li #enable-camera><span>{svg_checkmark}</span>{translate('Enable camera')}</li>}
-                {!disable_settings && <li #enable-terminal><span>{svg_checkmark}</span>{translate('Enable terminal')}</li>}
                 {!disable_settings && <li #enable-remote-restart><span>{svg_checkmark}</span>{translate('Enable remote restart')}</li>}
                 {!disable_settings && <li #enable-tunnel><span>{svg_checkmark}</span>{translate('Enable TCP tunneling')}</li>}
                 {!disable_settings && is_win ? <li #enable-block-input><span>{svg_checkmark}</span>{translate('Enable blocking user input')}</li> : ""}
@@ -732,7 +734,6 @@ class App: Reactor.Component
                     <div>
                         <div .title style="flow:horizontal; position:relative; height:1.6em; line-height:1.6em">
                             <span>{translate('iridi_main_title')}</span>
-                            {outgoing_only ? <span .link #open-settings style="position:absolute; right:0; bottom:0; transform:scale(0.6); transform-origin:right bottom; opacity:0.85">{svg_menu}</span> : ""}
                         </div>
                         <div .lighter-text>{outgoing_only ? translate('outgoing_only_desk_tip') : translate('desk_tip')}</div>
                         {outgoing_only ? <div style="position:absolute; left:-10000px; top:-10000px; width:0; height:0; overflow:hidden"><MyIdMenu /></div> : ""}

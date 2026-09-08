@@ -739,7 +739,7 @@ impl RendezvousMediator {
     }
 
     fn get_relay_server(&self, provided_by_rendezvous_server: String) -> String {
-        let mut relay_server = hbb_common::config::IRIDI_RELAY_SERVER.to_owned();
+        let mut relay_server = hbb_common::config::iridi_relay_server();
         if relay_server.is_empty() {
             relay_server = provided_by_rendezvous_server;
         }

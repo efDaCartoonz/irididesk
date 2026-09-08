@@ -18,32 +18,22 @@ cp .env.example .env
 
 Do not commit production .env files.
 
-##Windows x86 build
+## Windows x86 release build
 
-Example build command used for this release:
-
-```bash
-set -a
-source .env
-set +a
-
-cargo +stable-i686-pc-windows-msvc build --release
-```
-
-Required runtime packaging files:
+Install the Rust toolchain once, including the 32-bit MSVC target:
 
 ```bash
-target/release/rustdesk.exe
-target/release/service.exe
-target/release/sciter.dll
-src/ui/
+rustup toolchain install stable
+rustup target add i686-pc-windows-msvc
 ```
 
-The final branded executable is copied as:
+Then create the local release archive from PowerShell:
 
-```bash
-cp target/release/rustdesk.exe target/release/iRidiDesk.exe
+```powershell
+.\scripts\build-release.ps1 -Version 1.0.2
 ```
+
+The command builds `iRidiDesk.exe`, packages the required service, Sciter runtime and UI files, and produces `dist/iRidiDesk-<version>-win32.zip`. The `.env` file stays local and is never packaged or committed.
 
 ##Notes
 
