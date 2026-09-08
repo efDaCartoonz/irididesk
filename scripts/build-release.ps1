@@ -49,6 +49,12 @@ try {
     if ($null -eq $arm64Linker) {
         throw 'Install the Microsoft C++ ARM64 build tools component before building from an ARM64 PC.'
     }
+    $clang = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm' -Filter clang.exe -Recurse -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($null -eq $clang) {
+        throw 'Install the C++ Clang tools for Windows component before building from an ARM64 PC.'
+    }
+    $env:Path = $clang.DirectoryName + ';' + $env:Path
     $env:CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER = Join-Path $PSScriptRoot 'link-i686.cmd'
     cmd.exe /d /s /c "call `"$vcVars`" x64_arm64 >nul && cargo build --release --target i686-pc-windows-msvc"
     if ($LASTEXITCODE -ne 0) {

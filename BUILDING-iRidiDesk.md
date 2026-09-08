@@ -27,7 +27,7 @@ rustup toolchain install stable
 rustup target add i686-pc-windows-msvc
 ```
 
-For an ARM64 build computer, install both **Desktop development with C++** and the **MSVC v143 – VS 2022 C++ ARM64 build tools** individual component. The script uses the x64-hosted ARM64 linker for Rust's local build scripts and an x64-hosted x86 linker only for the final client, so the resulting package remains x86 (32-bit).
+For an ARM64 build computer, install **Desktop development with C++** plus these individual components: **MSVC v143 – VS 2022 C++ ARM64 build tools** and **C++ Clang tools for Windows**. The script uses the x64-hosted ARM64 linker for Rust's local build scripts and an x64-hosted x86 linker only for the final client, so the resulting package remains x86 (32-bit).
 
 Then create the local release archive from PowerShell:
 
